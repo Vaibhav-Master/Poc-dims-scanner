@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <title>dims-scanner — Setup</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #0b0b0f;
+      color: #e4e4e7;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: clamp(20px, 5vw, 60px) clamp(16px, 4vw, 40px);
+      -webkit-app-region: drag;
+      user-select: none;
+      overflow-y: auto;
+    }
+
+    .wizard {
+      -webkit-app-region: no-drag;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: clamp(24px, 4vw, 40px) 0;
+      position: relative;
+    }
+
+    /* ── Step transitions ──────────────────────────────────── */
+
+    .step { display: none; }
+    .step.active {
+      display: block;
+      animation: stepFadeIn 0.3s ease;
+    }
+    @keyframes stepFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Progress indicator ────────────────────────────────── */
+
+    .progress-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: clamp(24px, 4vw, 40px);
+    }
+
+    .progress-bar .dot {
+      flex: 1 1 0;
+      height: 3px;
+      border-radius: 2px;
+      background: #27272a;
+      transition: background 0.3s ease;
+    }
+
+    .progress-bar .dot.filled {
+      background: #3b82f6;
+    }
+
+    /* ── Typography ────────────────────────────────────────── */
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fafafa;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #a1a1aa;
+      line-height: 1.5;
+      margin-bottom: 32px;
+    }
+
+    /* ── Buttons ───────────────────────────────────────────── */
+
+    .btn {
+      width: 100%;
+      padding: 12px 0;
+      border-radius: 10px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:active { transform: scale(0.985); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) { background: #2563eb; }
+
+    .btn-secondary {
+      background: #1e1e24;
+      color: #a1a1aa;
+      border: 1px solid #27272a;
+    }
+    .btn-secondary:hover:not(:disabled) { background: #27272a; color: #e4e4e7; }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+    }
+    .btn-row .btn { flex: 1 1 0; }
+
+    /* ── Spinner ───────────────────────────────────────────── */
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .spinner--large {
+      width: 32px;
+      height: 32px;
+      border-width: 3px;
+      border-color: #27272a;
+      border-top-color: #3b82f6;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-hint {
+      font-size: 13px;
+      color: #71717a;
+      margin-top: 4px;
+    }
+
+    /* ── Warning / icon panels ────────────────────────────── */
+
+    .warning-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 22px;
+    }
+
+    /* ── Install progress panel ────────────────────────────── */
+
+    .install-progress {
+      margin: 16px 0 24px;
+      background: #12121a;
+      border: 1px solid #1e1e2a;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .install-progress .phase-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #71717a;
+      margin-bottom: 6px;
+    }
+    .install-progress .phase-message {
+      font-size: 14px;
+      color: #e4e4e7;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: #1a1a24;
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #3b82f6;
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+    .progress-fill.indeterminate {
+      width: 30%;
+      animation: indeterminateSlide 1.4s ease-in-out infinite;
+    }
+    @keyframes indeterminateSlide {
+      0%   { margin-left: -30%; }
+      100% { margin-left: 100%; }
+    }
+
+    /* ── Install error panel ───────────────────────────────── */
+
+    .install-error {
+      background: #12121a;
+      border: 1px solid #3f1d1d;
+      border-radius: 10px;
+      padding: 16px 18px;
+      text-align: left;
+      margin-top: 16px;
+    }
+    .install-error .label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #ef4444;
+      margin-bottom: 8px;
+    }
+    .install-error p {
+      font-size: 13px;
+      color: #d4d4d8;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    /* ── Select dropdown ──────────────────────────────────── */
+
+    label {
+      display: block;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: #71717a;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    select {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid #27272a;
+      background: #141418;
+      color: #fafafa;
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color 0.15s ease;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2371717a' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      margin-bottom: 20px;
+    }
+    select:focus { border-color: #3b82f6; }
+    select:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Empty state (Step 3 fallback) ─────────────────────── */
+
+    .empty-state {
+      background: #12121a;
+      border: 1px dashed #27272a;
+      border-radius: 10px;
+      padding: 28px 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .empty-state .empty-icon { font-size: 32px; margin-bottom: 8px; }
+    .empty-state .empty-title {
+      font-size: 14px;
+      color: #e4e4e7;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .empty-state .empty-detail {
+      font-size: 13px;
+      color: #71717a;
+      line-height: 1.5;
+    }
+
+    /* ── Success ───────────────────────────────────────────── */
+
+    .success-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.1);
+      border: 2px solid rgba(34, 197, 94, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+
+    .success-icon svg {
+      width: 28px;
+      height: 28px;
+      stroke: #22c55e;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .success-detail {
+      font-size: 13px;
+      color: #71717a;
+      margin-top: 6px;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="wizard">
+
+    <!-- 3-dot progress bar (3 real steps; gatekeeper occupies step 1) -->
+    <div class="progress-bar">
+      <div class="dot filled" id="dot-1"></div>
+      <div class="dot"        id="dot-2"></div>
+      <div class="dot"        id="dot-3"></div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- STEP 1: Dependency Gatekeeper (NAPS2)               -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div id="step-gatekeeper" class="step active">
+      <div class="warning-icon">&#9888;</div>
+      <h1>Scanning Engine Required</h1>
+      <p class="subtitle">
+        dims-scanner requires the <strong>NAPS2</strong> engine to operate.
+        Would you like dims-scanner to download and install it for you now?
+      </p>
+
+      <div class="btn-row">
+        <button id="btn-gate-no"  class="btn btn-secondary">No, Quit</button>
+        <button id="btn-gate-yes" class="btn btn-primary">Yes, Install</button>
+      </div>
+
+      <!-- Hidden until "Yes" is clicked -->
+      <div id="install-progress" class="install-progress" style="display:none;">
+        <div class="phase-label" id="install-phase-label">Preparing</div>
+        <div class="phase-message" id="install-phase-message">Resolving latest release&hellip;</div>
+        <div class="progress-track">
+          <div class="progress-fill" id="install-progress-fill"></div>
+        </div>
+      </div>
+
+      <div id="install-error" class="install-error" style="display:none;">
+        <div class="label">Install Failed</div>
+        <p id="install-error-text"></p>
+        <button id="btn-install-retry" class="btn btn-secondary" style="margin-top:12px;">Retry</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- STEP 2: OEM Driver Advisory                         -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div id="step-driver-advisory" class="step">
+      <div class="warning-icon">&#128221;</div>
+      <h1>Install Your Scanner Drivers</h1>
+      <p class="subtitle">
+        dims-scanner requires your official printer/scanner drivers to communicate
+        with your hardware. Please ensure you have downloaded and installed the
+        official drivers from your manufacturer (HP, Canon, Epson, Brother, etc.).
+      </p>
+      <p class="subtitle" style="margin-bottom: 24px;">
+        Once your drivers are installed and the scanner is connected, click Next.
+      </p>
+      <button id="btn-driver-next" class="btn btn-primary">Next</button>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- STEP 3: Scanner Selection (with empty-state)        -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div id="step-discovery" class="step">
+
+      <div id="discovery-loading" style="text-align:center;">
+        <div class="spinner spinner--large"></div>
+        <p class="subtitle" style="margin-bottom:0;">Discovering devices&hellip;</p>
+        <p class="loading-hint">This may take up to 30 seconds for Wi-Fi scanners</p>
+      </div>
+
+      <div id="discovery-content" style="display:none;">
+        <h1>Select Your Scanner</h1>
+        <p class="subtitle">
+          Choose the scanner this agent will use. You can change it later from the system tray.
+        </p>
+
+        <label for="scanner-select">Scanner Device</label>
+        <select id="scanner-select">
+          <option value="" disabled selected>Choose a scanner&hellip;</option>
+        </select>
+
+        <button id="btn-save" class="btn btn-primary" disabled>Save &amp; Continue</button>
+      </div>
+
+      <div id="discovery-empty" style="display:none;">
+        <div class="empty-state">
+          <div class="empty-icon">&#128269;</div>
+          <div class="empty-title">No scanners detected</div>
+          <div class="empty-detail">
+            Please check your USB / Wi-Fi connection and ensure your official
+            manufacturer drivers are installed.
+          </div>
+        </div>
+        <button id="btn-refresh" class="btn btn-primary">Refresh</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- Final: Success                                      -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div id="step-success" class="step">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+      <h1>You're All Set!</h1>
+      <p class="subtitle" style="margin-bottom:0;">
+        dims-scanner is now running silently in your system tray.
+      </p>
+      <p class="success-detail">You can close this window safely.</p>
+      <button id="btn-close" class="btn btn-primary">Close Window</button>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- Locked: scan in progress                            -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div id="step-locked" class="step">
+      <div class="warning-icon">&#128274;</div>
+      <h1>Hardware in Use</h1>
+      <p class="subtitle">
+        A scan is currently in progress. Please wait for it to finish before changing settings.
+      </p>
+    </div>
+
+  </div>
+
+  <script>
+    // ── DOM refs ──────────────────────────────────────────────────────────
+    const steps = {
+      gatekeeper:        document.getElementById('step-gatekeeper'),
+      'driver-advisory': document.getElementById('step-driver-advisory'),
+      discovery:         document.getElementById('step-discovery'),
+      success:           document.getElementById('step-success'),
+      locked:            document.getElementById('step-locked'),
+    };
+
+    const dots = [
+      document.getElementById('dot-1'),
+      document.getElementById('dot-2'),
+      document.getElementById('dot-3'),
+    ];
+
+    // Maps each step to which dot index should be the highest filled.
+    // -1 means hide / no progress (locked state).
+    const dotIndexFor = {
+      gatekeeper:        0,
+      'driver-advisory': 1,
+      discovery:         2,
+      success:           2,
+      locked:            -1,
+    };
+
+    // Gatekeeper refs
+    const btnGateNo          = document.getElementById('btn-gate-no');
+    const btnGateYes         = document.getElementById('btn-gate-yes');
+    const btnInstallRetry    = document.getElementById('btn-install-retry');
+    const installProgress    = document.getElementById('install-progress');
+    const installPhaseLabel  = document.getElementById('install-phase-label');
+    const installPhaseMessage = document.getElementById('install-phase-message');
+    const installProgressFill = document.getElementById('install-progress-fill');
+    const installError       = document.getElementById('install-error');
+    const installErrorText   = document.getElementById('install-error-text');
+
+    // Driver advisory ref
+    const btnDriverNext = document.getElementById('btn-driver-next');
+
+    // Discovery refs
+    const discoveryLoading = document.getElementById('discovery-loading');
+    const discoveryContent = document.getElementById('discovery-content');
+    const discoveryEmpty   = document.getElementById('discovery-empty');
+    const scannerSelect    = document.getElementById('scanner-select');
+    const btnSave          = document.getElementById('btn-save');
+    const btnRefresh       = document.getElementById('btn-refresh');
+
+    // Success ref
+    const btnClose = document.getElementById('btn-close');
+
+    // ── State ─────────────────────────────────────────────────────────────
+    let appState = null;
+    let installUnsubscribe = null;
+
+    // ── Step navigation ───────────────────────────────────────────────────
+    function goTo(stepName) {
+      for (const key of Object.keys(steps)) {
+        steps[key].classList.remove('active');
+      }
+      steps[stepName].classList.add('active');
+
+      const idx = dotIndexFor[stepName];
+      if (idx < 0) {
+        document.querySelector('.progress-bar').style.display = 'none';
+      } else {
+        document.querySelector('.progress-bar').style.display = '';
+        dots.forEach((dot, i) => {
+          dot.classList.toggle('filled', i <= idx);
+        });
+      }
+    }
+
+    // ── Progress UI helper ────────────────────────────────────────────────
+    function setProgress(payload) {
+      const phase = payload && payload.phase;
+      const percent = payload && payload.percent;
+      const message = payload && payload.message;
+      installPhaseLabel.textContent = (phase || '').replace(/-/g, ' ').toUpperCase();
+      installPhaseMessage.textContent = message || '';
+      if (typeof percent === 'number' && percent >= 0) {
+        installProgressFill.classList.remove('indeterminate');
+        installProgressFill.style.width = Math.max(0, Math.min(100, percent)) + '%';
+      } else {
+        installProgressFill.classList.add('indeterminate');
+        installProgressFill.style.width = '';
+      }
+    }
+
+    // ── Step 1: Gatekeeper ────────────────────────────────────────────────
+    btnGateNo.addEventListener('click', () => {
+      window.setupAPI.quitApp();
+    });
+
+    btnGateYes.addEventListener('click', startInstall);
+    btnInstallRetry.addEventListener('click', startInstall);
+
+    async function startInstall() {
+      installError.style.display = 'none';
+      installErrorText.textContent = '';
+      installProgress.style.display = 'block';
+      btnGateYes.disabled = true;
+      btnGateNo.disabled = true;
+      setProgress({ phase: 'resolving', percent: -1, message: 'Preparing\u2026' });
+
+      if (installUnsubscribe) installUnsubscribe();
+      installUnsubscribe = window.setupAPI.onInstallProgress(setProgress);
+
+      try {
+        const result = await window.setupAPI.installEngine();
+        if (result && result.success) {
+          installProgress.style.display = 'none';
+          goTo('driver-advisory');
+        } else {
+          installError.style.display = 'block';
+          installErrorText.textContent = (result && result.error) || 'Installation failed.';
+        }
+      } catch (err) {
+        installError.style.display = 'block';
+        installErrorText.textContent = (err && err.message) || String(err);
+      } finally {
+        if (installUnsubscribe) {
+          installUnsubscribe();
+          installUnsubscribe = null;
+        }
+        btnGateYes.disabled = false;
+        btnGateNo.disabled = false;
+        // Hide progress panel only on success path; on error keep it hidden so the
+        // error panel is the focal point. (We hide it above on success.)
+        if (installError.style.display !== 'block') {
+          installProgress.style.display = 'none';
+        } else {
+          installProgress.style.display = 'none';
+        }
+      }
+    }
+
+    // ── Step 2: Driver Advisory ───────────────────────────────────────────
+    btnDriverNext.addEventListener('click', () => {
+      goTo('discovery');
+      discoverScanners();
+    });
+
+    // ── Step 3: Discovery ─────────────────────────────────────────────────
+    async function discoverScanners() {
+      discoveryLoading.style.display = '';
+      discoveryContent.style.display = 'none';
+      discoveryEmpty.style.display = 'none';
+
+      let result;
+      try {
+        result = await window.setupAPI.getScanners();
+      } catch (err) {
+        // Hard IPC failure — fall back to the empty state so the user can retry.
+        discoveryLoading.style.display = 'none';
+        discoveryEmpty.style.display = '';
+        return;
+      }
+
+      // ── Engine missing → bounce all the way back to the gatekeeper ─────
+      // The user uninstalled NAPS2 (or it vanished). The "no scanners" empty
+      // state would be misleading because the problem is the engine, not hardware.
+      if (result && result.success === false && result.error === 'engine_missing') {
+        discoveryLoading.style.display = 'none';
+        // Reset the gatekeeper UI in case the user is bouncing back from a previous install
+        installError.style.display = 'none';
+        installProgress.style.display = 'none';
+        btnGateYes.disabled = false;
+        btnGateNo.disabled = false;
+        goTo('gatekeeper');
+        return;
+      }
+
+      // Other discovery failure (timeout, parse error, etc.) — surface the empty state
+      if (!result || result.success === false) {
+        discoveryLoading.style.display = 'none';
+        discoveryEmpty.style.display = '';
+        return;
+      }
+
+      // ── Success path ────────────────────────────────────────────────────
+      // Filter out the legacy test:0 fallback if it sneaks through.
+      const realScanners = (result.scanners || []).filter((n) => n && n !== 'test:0');
+
+      discoveryLoading.style.display = 'none';
+
+      if (realScanners.length === 0) {
+        discoveryEmpty.style.display = '';
+        return;
+      }
+
+      scannerSelect.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      placeholder.textContent = 'Choose a scanner\u2026';
+      scannerSelect.appendChild(placeholder);
+
+      realScanners.forEach((name) => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        if (appState && appState.defaultScanner === name) opt.selected = true;
+        scannerSelect.appendChild(opt);
+      });
+
+      scannerSelect.disabled = false;
+      btnSave.disabled = true;
+
+      if (appState && appState.defaultScanner && realScanners.includes(appState.defaultScanner)) {
+        scannerSelect.value = appState.defaultScanner;
+        btnSave.disabled = false;
+      } else if (realScanners.length === 1) {
+        scannerSelect.value = realScanners[0];
+        btnSave.disabled = false;
+      }
+
+      discoveryContent.style.display = '';
+    }
+
+    scannerSelect.addEventListener('change', () => {
+      btnSave.disabled = !scannerSelect.value;
+    });
+
+    btnRefresh.addEventListener('click', () => {
+      discoverScanners();
+    });
+
+    btnSave.addEventListener('click', async () => {
+      const selected = scannerSelect.value;
+      if (!selected) return;
+
+      btnSave.disabled = true;
+      const originalLabel = btnSave.textContent;
+      btnSave.innerHTML = '<div class="spinner"></div> Saving&hellip;';
+
+      try {
+        await window.setupAPI.saveScanner(selected);
+        goTo('success');
+      } catch (err) {
+        btnSave.disabled = false;
+        btnSave.textContent = originalLabel;
+      }
+    });
+
+    // ── Success → Close ───────────────────────────────────────────────────
+    // Hide via IPC instead of window.close() so the renderer's step state is
+    // never touched. The next "Change Scanner…" tray click will explicitly
+    // route the UI via the force-discovery event below.
+    btnClose.addEventListener('click', () => {
+      window.setupAPI.hideWindow();
+    });
+
+    // ── Force discovery (tray "Change Scanner…") ──────────────────────────
+    // Triggered by the tray menu's Change Scanner item. The renderer must
+    // refresh its `appState`, honour the hardware lock, and force-route the
+    // UI to either the discovery step or the locked step.
+    window.setupAPI.onForceDiscovery(async () => {
+      try {
+        appState = await window.setupAPI.getState();
+      } catch (err) {
+        // If state lookup fails, fall through to discovery anyway
+      }
+
+      if (appState && appState.isBusy) {
+        goTo('locked');
+        return;
+      }
+
+      goTo('discovery');
+      // Reset the Save button label in case the user previously hit Success
+      btnSave.textContent = 'Save & Continue';
+      btnSave.disabled = true;
+      discoverScanners();
+    });
+
+    // ── Boot sequence ─────────────────────────────────────────────────────
+    (async () => {
+      appState = await window.setupAPI.getState();
+
+      if (appState.isBusy) {
+        goTo('locked');
+        return;
+      }
+
+      if (appState.engineExists) {
+        // NAPS2 already installed — skip the gatekeeper
+        goTo('driver-advisory');
+      } else {
+        goTo('gatekeeper');
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -19,6 +19,8 @@
 
 # production
 /build
+/release
+/electron-dist
 
 # misc
 .DS_Store
@@ -39,3 +41,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# python (legacy)
+/venv
+/__pycache__
+*.pyc
+
+# legacy python reference (archived, never package)
+/_legacy_python_reference

@@ -1,0 +1,6 @@
+node_modules
+out
+.next
+_legacy_python_reference
+electron-dist
+release
